@@ -1,5 +1,11 @@
 # MobileChat
 
+> **Authors:**
+>
+> Frnciszek Cieślik
+>
+> Kajetan Mieloch
+
 ## Stage 1: Basic Setup and User Authentication  
 ### ✅ Goal: Implement a user login/registration system  
 1. **Firebase Configuration**  
