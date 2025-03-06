@@ -2,7 +2,7 @@
 
 > **Authors:**
 >
-> Frnciszek Cieślik
+> Franciszek Cieślik
 >
 > Kajetan Mieloch
 
