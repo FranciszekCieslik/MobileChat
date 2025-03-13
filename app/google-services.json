@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "295493648123",
+    "project_id": "mobilechat-c7329",
+    "storage_bucket": "mobilechat-c7329.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:295493648123:android:13d243f3892d8816dcba5e",
+        "android_client_info": {
+          "package_name": "com.example.MobileChat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "295493648123-370uk4l84os7bf5701ao74cch6gi2ut8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.MobileChat",
+            "certificate_hash": "8fd6b13c750dc75aa2dbadb9996497e3385f722e"
+          }
+        },
+        {
+          "client_id": "295493648123-81pous43n2trkhvpr33it1i52bdes7o4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC-zMK2fHkUJmuPDrR0JkT1bmXB0TE6cko"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "295493648123-81pous43n2trkhvpr33it1i52bdes7o4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
