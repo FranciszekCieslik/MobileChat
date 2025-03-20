@@ -78,4 +78,8 @@ dependencies {
 
     //Coli3
     implementation(libs.coil.compose) // Latest stable version
+
+    // Declare the dependency for the Cloud Firestore library
+    // When using the BoM, you don't specify versions in Firebase library dependencies
+    implementation(libs.firebase.firestore)
 }

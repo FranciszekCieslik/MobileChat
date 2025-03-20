@@ -33,15 +33,16 @@ class RegisterViewModel : ViewModel() {
         auth.createUserWithEmailAndPassword(_state.value.email, _state.value.password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    // Sign in success, update UI with the signed-in user's information
                     Log.d(TAG, "createUserWithEmail:success")
-                    val user = auth.currentUser
-                    Log.d(TAG, user?.displayName.toString())
-                    navController.navigate("login"){_state.value.isLoading = false}
+                    _state.value = _state.value.copy(isLoading = false) // Resetuje stan po zakończeniu
+
+                    navController.navigate("login") {
+                        popUpTo("register") { inclusive = true } // Usuwa ekran rejestracji
+                        launchSingleTop = true
+                    }
                 } else {
-                    // If sign in fails, display a message to the user.
                     Log.w(TAG, "createUserWithEmail:failure", task.exception)
-                    navController.navigate("register")
+                    _state.value = _state.value.copy(isLoading = false, error = "Registration failed")
                 }
             }
     }
@@ -55,48 +56,62 @@ class RegisterViewModel : ViewModel() {
         _state.value = _state.value.copy(isLoading = true, error = null)
 
         auth.signInWithEmailAndPassword(_state.value.email, _state.value.password)
-            .addOnCompleteListener{ task ->
+            .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    // Sign in success, update UI with the signed-in user's information
                     Log.d(TAG, "signInWithEmail:success")
-                    auth.currentUser
-                    navController.navigate("main"){getUserData()}
+                    getUserData() // Pobierz dane użytkownika przed nawigacją
+
+                    navController.navigate("main") {
+                        popUpTo("login") { inclusive = true } // Usuwa ekran logowania
+                        launchSingleTop = true
+                    }
+
+                    _state.value = _state.value.copy(isLoading = false)
                 } else {
-                    // If sign in fails, display a message to the user.
                     Log.w(TAG, "signInWithEmail:failure", task.exception)
-                    navController.navigate("login")
+                    _state.value = _state.value.copy(isLoading = false, error = "Login failed")
                 }
             }
     }
 
-    fun signOut(navController: NavController){
-        _state.value = RegisterState() // Reset to initial state
+    fun signOut(navController: NavController) {
+        _state.value = RegisterState() // Resetowanie stanu użytkownika
         Firebase.auth.signOut()
-        navController.navigate("login")
-
+        navController.navigate("login") {
+            popUpTo("main") { inclusive = true }
+            launchSingleTop = true
+        }
     }
 
     fun checkUserSession(navController: NavController) {
         val currentUser = auth.currentUser
         if (currentUser != null) {
-            // Użytkownik jest zalogowany, przejdź do głównego ekranu
-            navController.navigate("main"){getUserData()}
+            getUserData()
+            navController.navigate("main") {
+                popUpTo("loading") { inclusive = true }
+                launchSingleTop = true
+            }
         } else {
-            // Użytkownik niezalogowany, przejdź do ekranu logowania
-            navController.navigate("register")
+            navController.navigate("register") {
+                popUpTo("loading") { inclusive = true }
+                launchSingleTop = true
+            }
         }
     }
 
-    fun removeUser(navController: NavController){
-        val user = Firebase.auth.currentUser!!
-        user.delete()
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    Log.d(TAG, "User account deleted.")
-                }
+
+    fun removeUser(navController: NavController) {
+        val user = Firebase.auth.currentUser
+        user?.delete()?.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                Log.d(TAG, "User account deleted.")
+                signOut(navController)
+            } else {
+                Log.e(TAG, "User deletion failed", task.exception)
             }
-        signOut(navController)
+        }
     }
+
 
     private fun getUserData(){
         val user = Firebase.auth.currentUser

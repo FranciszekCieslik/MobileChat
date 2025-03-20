@@ -3,17 +3,15 @@
 package com.example.MobileChat
 
 import android.annotation.SuppressLint
+import android.content.ContentValues.TAG
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-//import androidx.media3.common.util.Log
 import com.google.android.gms.common.api.ApiException
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -26,18 +24,26 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ktx.firestore
+import database.FirestoreDatabaseProvider
 
 @Suppress("DEPRECATION")
 class MainActivity : ComponentActivity() {
     private val viewModel: RegisterViewModel by viewModels()
     private lateinit var navController: NavHostController
-
+    private  lateinit var db:FirebaseFirestore
+    private lateinit var dbProvider:FirestoreDatabaseProvider
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         // Init FirebaseApp connection
         FirebaseApp.initializeApp(this)
+
+        // Init Database connection and provider
+        db = Firebase.firestore
+        dbProvider = FirestoreDatabaseProvider()
 
         // BEGIN AUTHENTICATION BY GOOGLE
         oneTapClient = Identity.getSignInClient(this)
@@ -76,6 +82,8 @@ class MainActivity : ComponentActivity() {
                     Firebase.auth.signInWithCredential(firebaseCredential)
                         .addOnCompleteListener(this) { task ->
                             if (task.isSuccessful) {
+                                dbProvider.addUserToFirestore()
+                                dbProvider.download()
 //                                Log.d(TAG, "One Tap sign-in successful")
                                 // Zalogowano - nawiguj do głównego ekranu
                                 startActivity(Intent(this, MainActivity::class.java))
@@ -98,7 +106,6 @@ class MainActivity : ComponentActivity() {
             // Możesz dodać logowanie błędu
             return
         }
-
         oneTapClient.beginSignIn(signInRequest)
             .addOnSuccessListener { result ->
                 startIntentSenderForResult(
