@@ -12,6 +12,7 @@ import screens.ProfileScreen
 import screens.SettingsScreen
 import screens.LoginScreen
 import screens.CreateRoomScreen
+import screens.BrowseRoomsScreen
 
 @Composable
 fun NavGraph(navController: NavHostController, viewModel: RegisterViewModel) {
@@ -23,5 +24,6 @@ fun NavGraph(navController: NavHostController, viewModel: RegisterViewModel) {
         composable("profile") { ProfileScreen(navController, viewModel) }
         composable("settings") { SettingsScreen(navController, viewModel) }
         composable("createRoom") { CreateRoomScreen(navController) }
+        composable("browseRooms") { BrowseRoomsScreen(navController) }
     }
 }
