@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -40,12 +41,22 @@ fun ProfileScreen(
         },
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Your Profile", fontSize = 20.sp, fontWeight = FontWeight.Bold) },
-                navigationIcon = {
+                title = {
+                    Text("Your Profile", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                },
+                navigationIcon = { // Ikona po lewej stronie
                     IconButton(onClick = { navController.navigate("settings") }) {
                         Icon(
                             imageVector = Icons.Filled.Settings,
                             contentDescription = "Go to Settings"
+                        )
+                    }
+                },
+                actions = { // Ikona po prawej stronie
+                    IconButton(onClick = { navController.navigate("editprofile")}) {
+                        Icon(
+                            imageVector = Icons.Filled.Edit,
+                            contentDescription = "Edit your profile"
                         )
                     }
                 },
@@ -55,6 +66,7 @@ fun ProfileScreen(
                 )
             )
         }
+
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -103,6 +115,29 @@ fun ProfileScreen(
                 text = state.value.email,
                 style = MaterialTheme.typography.bodyMedium
             )
+
+            // Nazwa użytkownika (Nickname)
+            val trimmedNickname = state.value.nickname.trim()
+            if (trimmedNickname.isNotEmpty()) {
+                Text(
+                    text = trimmedNickname,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+// Bio użytkownika
+            val trimmedBio = state.value.bio.trim()
+            if (trimmedBio.isNotEmpty()) {
+                Text(
+                    text = trimmedBio,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray
+                )
+            }
+
         }
     }
 }
