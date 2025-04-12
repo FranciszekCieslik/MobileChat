@@ -21,7 +21,11 @@
 
 3. **User Session Management**  
    - Implement automatic login persistence  
-   - Implement logout functionality  
+   - Implement logout functionality
+  
+[stage_1](https://github.com/user-attachments/assets/25417b74-4b48-444b-a3be-ca56edd176e2)
+
+---
 
 ## Stage 2: User Database and Data Management  
 ### ✅ Goal: Store user profiles and manage friend lists  
