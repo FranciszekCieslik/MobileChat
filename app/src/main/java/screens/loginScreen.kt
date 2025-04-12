@@ -106,26 +106,27 @@ fun LoginScreen(
             }
         }
         Spacer(modifier = Modifier.height(8.dp))
-        Button(
-            onClick = { activity.startSignIn()},
-            modifier = Modifier
-                .padding(16.dp)
-                .border (2.dp, Color.Black, RoundedCornerShape(18.dp)) // Zaokrąglona granica
-                .clip(RoundedCornerShape(8.dp)), // Zaokrąglenie granic przycisku
-            colors = ButtonDefaults.buttonColors(Color.White)
-        ){
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Ikona Google
-                androidx.compose.foundation.Image(
-                    painter = painterResource(id = R.drawable.icon_google),
-                    contentDescription = "Google Logo",
-                    modifier = Modifier.padding(end = 8.dp)
-                )
-                Text(text = "Sign in  with Google", color = Color.Black)
-            }
-        }
+
+//        Button(
+//            onClick = { activity.startSignIn()},
+//            modifier = Modifier
+//                .padding(16.dp)
+//                .border (2.dp, Color.Black, RoundedCornerShape(18.dp)) // Zaokrąglona granica
+//                .clip(RoundedCornerShape(8.dp)), // Zaokrąglenie granic przycisku
+//            colors = ButtonDefaults.buttonColors(Color.White)
+//        ){
+//            Row(
+//                verticalAlignment = Alignment.CenterVertically
+//            ) {
+//                // Ikona Google
+//                androidx.compose.foundation.Image(
+//                    painter = painterResource(id = R.drawable.icon_google),
+//                    contentDescription = "Google Logo",
+//                    modifier = Modifier.padding(end = 8.dp)
+//                )
+//                Text(text = "Sign in  with Google", color = Color.Black)
+//            }
+//        }
 
     }
 }

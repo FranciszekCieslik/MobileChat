@@ -61,20 +61,20 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 
     // NAVIGATION WITH COMPOSE
-    implementation("androidx.navigation:navigation-compose:2.8.9")
+    implementation(libs.androidx.navigation.compose)
 
     // FIREBASE AUTHENTICATION
     // Import the BoM for the Firebase platform
-    implementation(platform("com.google.firebase:firebase-bom:33.10.0"))
+    implementation(platform(libs.firebase.bom))
 
     // Add the dependency for the Firebase Authentication library
     // When using the BoM, you don't specify versions in Firebase library dependencies
-    implementation("com.google.firebase:firebase-auth-ktx:23.2.0")
+    implementation(libs.firebase.auth.ktx)
 
     // Also add the dependencies for the Credential Manager libraries and specify their versions
-    implementation("androidx.credentials:credentials:1.3.0")
-    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
-    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
 
     //Coli3
     implementation(libs.coil.compose) // Latest stable version
