@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 class RegisterViewModel : ViewModel() {
     private val _state = MutableStateFlow(RegisterState())
     val state: StateFlow<RegisterState> = _state
-    private var auth = Firebase.auth
+    var auth = Firebase.auth
 
     // Aktualizowanie emaila
     fun onEmailChange(newEmail: String) {
@@ -77,6 +77,7 @@ class RegisterViewModel : ViewModel() {
     fun signOut(navController: NavController) {
         _state.value = RegisterState() // Resetowanie stanu użytkownika
         Firebase.auth.signOut()
+
         navController.navigate("login") {
             popUpTo("chats") { inclusive = true }
             launchSingleTop = true
@@ -121,7 +122,6 @@ class RegisterViewModel : ViewModel() {
                 _state.value = _state.value.copy(name = profile.displayName.toString())
                 _state.value = _state.value.copy(email = profile.email.toString())
                 _state.value = _state.value.copy(photoUrl = profile.photoUrl.toString())
-
             }
         }
     }
