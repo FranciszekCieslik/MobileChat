@@ -61,7 +61,7 @@ class RegisterViewModel : ViewModel() {
                     Log.d(TAG, "signInWithEmail:success")
                     getUserData() // Pobierz dane użytkownika przed nawigacją
 
-                    navController.navigate("main") {
+                    navController.navigate("chats") {
                         popUpTo("login") { inclusive = true } // Usuwa ekran logowania
                         launchSingleTop = true
                     }
@@ -78,7 +78,7 @@ class RegisterViewModel : ViewModel() {
         _state.value = RegisterState() // Resetowanie stanu użytkownika
         Firebase.auth.signOut()
         navController.navigate("login") {
-            popUpTo("main") { inclusive = true }
+            popUpTo("chats") { inclusive = true }
             launchSingleTop = true
         }
     }
@@ -87,7 +87,7 @@ class RegisterViewModel : ViewModel() {
         val currentUser = auth.currentUser
         if (currentUser != null) {
             getUserData()
-            navController.navigate("main") {
+            navController.navigate("chats") {
                 popUpTo("loading") { inclusive = true }
                 launchSingleTop = true
             }

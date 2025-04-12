@@ -5,9 +5,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import authentication.RegisterViewModel
-import screens.ChatsScreen
 import screens.EditProfileScreen
-import screens.MainScreen
+import screens.ChatsScreen
 import screens.LoadingScreen
 import screens.RegisterScreen
 import screens.ProfileScreen
@@ -22,12 +21,11 @@ fun NavGraph(navController: NavHostController, viewModel: RegisterViewModel) {
         composable("loading") { LoadingScreen(navController, viewModel) }
         composable("login") { LoginScreen(navController,viewModel) }
         composable("register") { RegisterScreen(navController,viewModel) }
-        composable("main") { MainScreen(navController)}
+        composable("chats") { ChatsScreen(navController)}
         composable("profile") { ProfileScreen(navController, viewModel) }
         composable("settings") { SettingsScreen(navController, viewModel) }
         composable("createRoom") { CreateRoomScreen(navController) }
         composable("browseRooms") { BrowseRoomsScreen(navController) }
         composable("editprofile") { EditProfileScreen(navController)}
-        composable("chats") { ChatsScreen(navController)}
     }
 }

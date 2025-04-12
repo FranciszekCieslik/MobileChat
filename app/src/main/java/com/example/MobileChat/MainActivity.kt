@@ -89,7 +89,7 @@ class MainActivity : ComponentActivity() {
                                 startActivity(Intent(this, MainActivity::class.java))
                                 finish()
                             } else {
-//                                Log.w(TAG, "Firebase sign-in failed", task.exception)
+                                Log.w(TAG, "Firebase sign-in failed", task.exception)
                             }
                         }
                 } else {
@@ -118,12 +118,10 @@ class MainActivity : ComponentActivity() {
                 )
             }
             .addOnFailureListener { e ->
-//                Log.e(TAG, "One Tap sign-in failed: ${e.localizedMessage}")
+                Log.e(TAG, "One Tap sign-in failed: ${e.localizedMessage}")
             }
     }
-
     // END AUTHENTICATION BY GOOGLE
-
 }
 
 @Composable
