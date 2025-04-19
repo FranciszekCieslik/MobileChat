@@ -35,15 +35,15 @@ class FirestoreDatabaseProvider {
                 "friends" to emptyList<String>()
             )
 
-            db.collection("users").document(user.uid)
-                .set(userMap)
+            db.collection("users")
+                .document(user.uid) // użyj UID jako ID dokumentu
+                .set(userMap)       // zamiast .add()
                 .addOnSuccessListener {
-                    Log.d(TAG, "User added to Firestore")
+                    Log.d(TAG, "User document created with UID: ${user.uid}")
                 }
                 .addOnFailureListener { e ->
-                    Log.e(TAG, "Error adding user to Firestore", e)
+                    Log.w(TAG, "Error adding user document", e)
                 }
-
         }
     }
 

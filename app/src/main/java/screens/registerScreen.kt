@@ -30,11 +30,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import authentication.RegisterViewModel
+import database.FirestoreDatabaseProvider
 
 @Composable
 fun RegisterScreen(
     navController: NavController,
-    viewModel: RegisterViewModel = viewModel()
+    viewModel: RegisterViewModel = viewModel(),
+    dbProvider: FirestoreDatabaseProvider
 ) {
     val state = viewModel.state.collectAsState()
     var termsAccepted by remember { mutableStateOf(false) }
@@ -95,7 +97,7 @@ fun RegisterScreen(
         }
         Spacer(modifier = Modifier.height(8.dp))
         Button(
-            onClick = { viewModel.signUp(navController) },
+            onClick = {viewModel.signUp(navController, dbProvider)},
             modifier = Modifier.fillMaxWidth(),
             enabled = isFormValid
             ) {

@@ -17,6 +17,7 @@ import com.example.MobileChat.R
 fun BottomNavBar(navController: NavController, selectedRoute: String) {
     val items = listOf(
         BottomNavItem("chats", "Chats", R.drawable.baseline_chat_24),
+        BottomNavItem("friends", "Friends", R.drawable.baseline_people_alt_24),
         BottomNavItem("profile", "Profile", Icons.Default.Person)
     )
 

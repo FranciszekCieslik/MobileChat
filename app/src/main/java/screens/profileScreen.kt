@@ -76,17 +76,17 @@ fun ProfileScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (state.value.photoUrl != "null") {
-                AsyncImage(
-                    model = state.value.photoUrl,
-                    contentDescription = "Profile Picture",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(100.dp)
-                        .clip(CircleShape)
-                        .border(2.dp, Color.Black, CircleShape),
-                    placeholder = painterResource(R.drawable.account_icon)
-                )
+            if (/*state.value.photoUrl != "null"*/false) {
+//                AsyncImage(
+//                    model = state.value.photoUrl,
+//                    contentDescription = "Profile Picture",
+//                    contentScale = ContentScale.Crop,
+//                    modifier = Modifier
+//                        .size(100.dp)
+//                        .clip(CircleShape)
+//                        .border(2.dp, Color.Black, CircleShape),
+//                    placeholder = painterResource(R.drawable.account_icon)
+//                )
             } else {
                 Icon(
                     imageVector = Icons.Filled.AccountCircle,
@@ -101,12 +101,12 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Nazwa użytkownika
-            if (state.value.name.isNotEmpty()) {
-                Text(
-                    text = state.value.name,
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            }
+//            if (state.value.name.isNotEmpty()) {
+//                Text(
+//                    text = state.value.name,
+//                    style = MaterialTheme.typography.bodyLarge
+//                )
+//            }
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -117,26 +117,26 @@ fun ProfileScreen(
             )
 
             // Nazwa użytkownika (Nickname)
-            val trimmedNickname = state.value.nickname.trim()
-            if (trimmedNickname.isNotEmpty()) {
-                Text(
-                    text = trimmedNickname,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+//            val trimmedNickname = state.value.nickname.trim()
+//            if (trimmedNickname.isNotEmpty()) {
+//                Text(
+//                    text = trimmedNickname,
+//                    style = MaterialTheme.typography.bodyLarge,
+//                    fontWeight = FontWeight.Bold
+//                )
+//            }
 
             Spacer(modifier = Modifier.height(8.dp))
 
 // Bio użytkownika
-            val trimmedBio = state.value.bio.trim()
-            if (trimmedBio.isNotEmpty()) {
-                Text(
-                    text = trimmedBio,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray
-                )
-            }
+//            val trimmedBio = state.value.bio.trim()
+//            if (trimmedBio.isNotEmpty()) {
+//                Text(
+//                    text = trimmedBio,
+//                    style = MaterialTheme.typography.bodyMedium,
+//                    color = Color.Gray
+//                )
+//            }
 
         }
     }

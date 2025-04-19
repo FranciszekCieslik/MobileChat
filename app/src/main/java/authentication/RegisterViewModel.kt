@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import database.FirestoreDatabaseProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -23,16 +24,17 @@ class RegisterViewModel : ViewModel() {
         _state.value = _state.value.copy(password = newPassword)
     }
 
-    fun signUp(navController: NavController) {
+    fun signUp(navController: NavController, dbProvider: FirestoreDatabaseProvider) {
         if (_state.value.email.isBlank() || _state.value.password.isBlank()) {
             _state.value = _state.value.copy(error = "Email and password cannot be empty.")
-            return
+
         }
 
         _state.value = _state.value.copy(isLoading = true, error = null)
         auth.createUserWithEmailAndPassword(_state.value.email, _state.value.password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
+                    dbProvider.addUserToFirestore()
                     Log.d(TAG, "createUserWithEmail:success")
                     _state.value = _state.value.copy(isLoading = false) // Resetuje stan po zakończeniu
 
@@ -40,11 +42,13 @@ class RegisterViewModel : ViewModel() {
                         popUpTo("register") { inclusive = true } // Usuwa ekran rejestracji
                         launchSingleTop = true
                     }
+
                 } else {
                     Log.w(TAG, "createUserWithEmail:failure", task.exception)
                     _state.value = _state.value.copy(isLoading = false, error = "Registration failed")
                 }
             }
+
     }
 
     fun signIn(navController: NavController) {
@@ -119,9 +123,7 @@ class RegisterViewModel : ViewModel() {
         user?.let {
             for (profile in it.providerData) {
                 // Id of the provider (ex: google.com)
-                _state.value = _state.value.copy(name = profile.displayName.toString())
                 _state.value = _state.value.copy(email = profile.email.toString())
-                _state.value = _state.value.copy(photoUrl = profile.photoUrl.toString())
             }
         }
     }
