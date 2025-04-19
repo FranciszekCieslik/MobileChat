@@ -1,28 +1,23 @@
-@file:Suppress("DEPRECATION")
-
 package com.example.MobileChat
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import authentication.RegisterViewModel
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import database.FirestoreDatabaseProvider
 
 class MainActivity : ComponentActivity() {
-    private val viewModel: RegisterViewModel by viewModels()
-    private lateinit var navController: NavHostController
     private lateinit var db: FirebaseFirestore
-    private lateinit var dbProvider: FirestoreDatabaseProvider
     private lateinit var auth : FirebaseAuth
+    private lateinit var provider: MainProvider
+    private lateinit var navController: NavHostController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,23 +27,17 @@ class MainActivity : ComponentActivity() {
 
         // Init Database connection and provider
         db = Firebase.firestore
-        dbProvider = FirestoreDatabaseProvider()
-        auth = viewModel.auth
+        auth = Firebase.auth
+
+        provider = MainProvider()
         setContent {
             navController = rememberNavController() // Initialize navController
-            App(navController, viewModel, dbProvider) // Pass NavController to the main component
+            App(navController, provider) // Pass NavController to the main component
         }
     }
-
-    override fun onStart() {
-        super.onStart()
-        // Check if user is signed in (non-null) and update UI accordingly.
-        val currentUser = auth.currentUser
-    }
-
 }
 
 @Composable
-fun App(navController: NavHostController, viewModel: RegisterViewModel,dbProvider: FirestoreDatabaseProvider) {
-    NavGraph(navController, viewModel, dbProvider)
+fun App(navController: NavHostController, provider: MainProvider) {
+    NavGraph(navController, provider)
 }

@@ -1,4 +1,4 @@
-package com.example.MobileChat.models
+package com.example.MobileChat
 
 data class RoomResponse(
     val id: String,

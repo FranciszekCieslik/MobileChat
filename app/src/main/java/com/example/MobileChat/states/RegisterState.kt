@@ -1,4 +1,4 @@
-package authentication
+package com.example.MobileChat.states
 
 data class RegisterState(
     val email: String = "",

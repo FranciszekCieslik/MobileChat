@@ -1,19 +1,15 @@
 package screens
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -25,25 +21,22 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import authentication.RegisterViewModel
 import com.example.MobileChat.MainActivity
-import com.example.MobileChat.R
+import com.example.MobileChat.MainProvider
 
 @SuppressLint("ContextCastToActivity")
 @Composable
 fun LoginScreen(
     navController: NavController,
-    viewModel: RegisterViewModel = viewModel(),
+    provider: MainProvider = viewModel()
 ) {
-    val state = viewModel.state.collectAsState()
-    val activity = LocalContext.current as? MainActivity
+    val state = provider.state.collectAsState()
+    LocalContext.current as? MainActivity
         ?: throw IllegalStateException("MainActivity is required for LoginScreen")
 
     val isEmailValid = state.value.email.matches(Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$"))
@@ -64,12 +57,12 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(16.dp))
         EmailField(
             value = state.value.email,
-            onValueChange = { viewModel.onEmailChange(it) },
+            onValueChange = { provider.onEmailChange(it) },
             isEmailValid
         )
         PasswordField(
             value = state.value.password,
-            onValueChange = { viewModel.onPasswordChange(it) },
+            onValueChange = { provider.onPasswordChange(it) },
             isPasswordValid
         )
 
@@ -80,7 +73,7 @@ fun LoginScreen(
         }
 
         Button(
-            onClick = { viewModel.signIn(navController) },
+            onClick = { provider.signIn(navController) },
             modifier = Modifier.fillMaxWidth()
         ) {
             if (state.value.isLoading) {
