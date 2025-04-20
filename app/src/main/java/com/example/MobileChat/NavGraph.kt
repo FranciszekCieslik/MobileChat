@@ -27,6 +27,6 @@ fun NavGraph(navController: NavHostController, provider: MainProvider) {
         composable("settings") { SettingsScreen(navController, provider) }
         composable("createRoom") { CreateRoomScreen(navController) }
         composable("browseRooms") { BrowseRoomsScreen(navController) }
-        composable("editprofile") { EditProfileScreen(navController)}
+        composable("editprofile") { EditProfileScreen(navController, provider)}
     }
 }

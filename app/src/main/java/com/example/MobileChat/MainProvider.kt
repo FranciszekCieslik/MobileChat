@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
 import com.example.MobileChat.states.RegisterState
+import com.example.MobileChat.states.UserState
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
@@ -13,12 +14,23 @@ import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
+@Suppress("UNCHECKED_CAST")
 class MainProvider  : ViewModel() {
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
 
     private val _state = MutableStateFlow(RegisterState())
     val state: StateFlow<RegisterState> = _state
+
+    private val _userState = MutableStateFlow(UserState())
+    val userState: StateFlow<UserState> = _userState
+
+    init {
+        val userId = auth.currentUser?.uid
+        userId?.let{
+            fetchUserData(userId)
+        }
+    }
 
     //DB
     private fun deleteUserData(){
@@ -34,26 +46,50 @@ class MainProvider  : ViewModel() {
 
     }
 
-    fun download() {
+    fun updateUserProfile(name: String?, bio: String?, profileUrl: String?) {
         val userId = auth.currentUser?.uid ?: return
-        db.collection("users").document(userId)
-            .get()
+        val updates = mutableMapOf<String, Any>()
+
+        name?.takeIf { it.isNotBlank() }?.let { updates["name"] = it }
+        bio?.takeIf { it.isNotBlank() }?.let { updates["bio"] = it }
+        profileUrl?.takeIf { it.isNotBlank() }?.let { updates["profile_url"] = it }
+
+        db.collection("users").document(userId).update(updates)
+            .addOnSuccessListener {
+                fetchUserData(userId) // odśwież stan po edycji
+            }
+            .addOnFailureListener { e ->
+                Log.e("MainProvider", "Failed to update user profile", e)
+            }
+    }
+
+
+    private fun fetchUserData(userId: String) {
+        db.collection("users").document(userId).get()
             .addOnSuccessListener { document ->
-                if(document.exists()) {
-                    val friends = document.get("friends")
-                    Log.w(TAG, "Firebase DB connected")
-                    if(friends != null){
-                        Log.i(TAG, "You have friends")
-                    }
+                if (document != null && document.exists()) {
+                    val user = UserState(
+                        email = document.getString("email") ?: "",
+                        name = document.getString("name") ?: "",
+                        bio = document.getString("bio") ?: "",
+                        profileUrl = document.getString("profile_url") ?: "",
+                        friends = document.get("friends") as? List<String> ?: emptyList(),
+                        invitedFriends = document.get("invited_friends") as? List<String> ?: emptyList(),
+                        friendRequest = document.get("friend_requests") as? List<String> ?: emptyList()
+                    )
+                    _userState.value = user
+                } else {
+                    Log.w("MainProvider", "User document not found.")
                 }
             }
-            .addOnFailureListener {
-                Log.e(TAG, "Firebase DB download failed")
+            .addOnFailureListener { exception ->
+                Log.e("MainProvider", "Error fetching user data", exception)
             }
     }
 
     private fun addUserToFirestore() {
         val user = auth.currentUser
+        val bio = ""
         user?.let {
             val userMap = hashMapOf(
                 "email" to user.email,
@@ -61,7 +97,8 @@ class MainProvider  : ViewModel() {
                 "profile_url" to (user.photoUrl?.toString() ?: ""),
                 "friends" to emptyList<String>(),
                 "friend_requests" to emptyList<String>(),
-                "invited_friends" to emptyList<String>()
+                "invited_friends" to emptyList<String>(),
+                "bio" to bio
             )
 
 
@@ -100,7 +137,8 @@ class MainProvider  : ViewModel() {
                     addUserToFirestore()
                     Log.d(TAG, "createUserWithEmail:success")
                     _state.value = _state.value.copy(isLoading = false) // Resetuje stan po zakończeniu
-
+                    val userId = auth.currentUser?.uid
+                    userId?.let { fetchUserData(it) }
                     navController.navigate("login") {
                         popUpTo("register") { inclusive = true } // Usuwa ekran rejestracji
                         launchSingleTop = true

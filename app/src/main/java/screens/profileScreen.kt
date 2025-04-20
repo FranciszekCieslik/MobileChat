@@ -27,11 +27,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 import com.example.MobileChat.MainProvider
 
 
@@ -42,7 +44,7 @@ fun ProfileScreen(
     navController: NavController,
     provider: MainProvider = viewModel()
 ) {
-    val state = provider.state.collectAsState()
+    val userState = provider.userState.collectAsState()
 
     Scaffold(
         bottomBar = {
@@ -53,7 +55,7 @@ fun ProfileScreen(
                 title = {
                     Text("Your Profile", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 },
-                navigationIcon = { // Ikona po lewej stronie
+                navigationIcon = {
                     IconButton(onClick = { navController.navigate("settings") }) {
                         Icon(
                             imageVector = Icons.Filled.Settings,
@@ -61,8 +63,8 @@ fun ProfileScreen(
                         )
                     }
                 },
-                actions = { // Ikona po prawej stronie
-                    IconButton(onClick = { navController.navigate("editprofile")}) {
+                actions = {
+                    IconButton(onClick = { navController.navigate("editprofile") }) {
                         Icon(
                             imageVector = Icons.Filled.Edit,
                             contentDescription = "Edit your profile"
@@ -85,17 +87,17 @@ fun ProfileScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (/*state.value.photoUrl != "null"*/false) {
-//                AsyncImage(
-//                    model = state.value.photoUrl,
-//                    contentDescription = "Profile Picture",
-//                    contentScale = ContentScale.Crop,
-//                    modifier = Modifier
-//                        .size(100.dp)
-//                        .clip(CircleShape)
-//                        .border(2.dp, Color.Black, CircleShape),
-//                    placeholder = painterResource(R.drawable.account_icon)
-//                )
+            val profileUrl = userState.value.profileUrl
+
+            if (profileUrl.isNotBlank()) {
+                androidx.compose.foundation.Image(
+                    painter = rememberAsyncImagePainter(profileUrl),
+                    contentDescription = "Profile Picture",
+                    modifier = Modifier
+                        .size(100.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
             } else {
                 Icon(
                     imageVector = Icons.Filled.AccountCircle,
@@ -109,44 +111,30 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Nazwa użytkownika
-//            if (state.value.name.isNotEmpty()) {
-//                Text(
-//                    text = state.value.name,
-//                    style = MaterialTheme.typography.bodyLarge
-//                )
-//            }
+            if (userState.value.name.isNotBlank()) {
+                Text(
+                    text = userState.value.name.trim(),
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Adres e-mail użytkownika
             Text(
-                text = state.value.email,
+                text = userState.value.email,
                 style = MaterialTheme.typography.bodyMedium
             )
 
-            // Nazwa użytkownika (Nickname)
-//            val trimmedNickname = state.value.nickname.trim()
-//            if (trimmedNickname.isNotEmpty()) {
-//                Text(
-//                    text = trimmedNickname,
-//                    style = MaterialTheme.typography.bodyLarge,
-//                    fontWeight = FontWeight.Bold
-//                )
-//            }
-
             Spacer(modifier = Modifier.height(8.dp))
 
-// Bio użytkownika
-//            val trimmedBio = state.value.bio.trim()
-//            if (trimmedBio.isNotEmpty()) {
-//                Text(
-//                    text = trimmedBio,
-//                    style = MaterialTheme.typography.bodyMedium,
-//                    color = Color.Gray
-//                )
-//            }
-
+            if (userState.value.bio.isNotBlank()) {
+                Text(
+                    text = userState.value.bio.trim(),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray
+                )
+            }
         }
     }
 }

@@ -28,17 +28,25 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.example.MobileChat.MainProvider
 import com.example.MobileChat.R
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun EditProfileScreen(navController: NavController) {
+fun EditProfileScreen(navController: NavController, provider: MainProvider) {
     var profileImageUri by remember { mutableStateOf<Uri?>(null) }
     var nickname by remember { mutableStateOf(TextFieldValue("")) }
     var bio by remember { mutableStateOf(TextFieldValue("")) }
     val coroutineScope = rememberCoroutineScope()
+
+    val userState by provider.userState.collectAsState()
+    LaunchedEffect(userState) {
+        nickname = TextFieldValue(userState.name)
+        bio = TextFieldValue(userState.bio)
+        profileImageUri = userState.profileUrl.takeIf { it.isNotBlank() }?.let { Uri.parse(it) }
+    }
 
     Scaffold(
         topBar = {
@@ -52,7 +60,7 @@ fun EditProfileScreen(navController: NavController) {
                 actions = {
                     IconButton(onClick = {
                         coroutineScope.launch {
-                            saveProfileData(nickname.text, bio.text, profileImageUri)
+                            saveProfileData(provider, nickname.text, bio.text, profileImageUri)
                             navController.popBackStack()
                         }
                     }) {
@@ -113,6 +121,16 @@ fun pickImageFromGallery(): Uri? {
     return null
 }
 
-suspend fun saveProfileData(nickname: String, bio: String, profileImageUri: Uri?) {
-    // Tu dodaj kod do zapisu danych użytkownika
+suspend fun saveProfileData(
+    provider: MainProvider,
+    nickname: String,
+    bio: String,
+    profileImageUri: Uri?
+) {
+    provider.updateUserProfile(
+        name = nickname,
+        bio = bio,
+        profileUrl = profileImageUri?.toString()
+    )
 }
+
