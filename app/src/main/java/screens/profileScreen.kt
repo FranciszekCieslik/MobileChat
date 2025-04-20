@@ -1,6 +1,7 @@
 package screens
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -90,12 +91,18 @@ fun ProfileScreen(
             val profileUrl = userState.value.profileUrl
 
             if (profileUrl.isNotBlank()) {
-                androidx.compose.foundation.Image(
-                    painter = rememberAsyncImagePainter(profileUrl),
-                    contentDescription = "Profile Picture",
-                    modifier = Modifier
-                        .size(100.dp)
-                        .clip(CircleShape),
+//                androidx.compose.foundation.Image(
+//                    painter = rememberAsyncImagePainter(profileUrl),
+//                    contentDescription = "Profile Picture",
+//                    modifier = Modifier
+//                        .size(100.dp)
+//                        .clip(CircleShape),
+//                    contentScale = ContentScale.Crop
+//                )
+                Image(
+                    painter = rememberAsyncImagePainter(model = userState.value.profileUrl),
+                    contentDescription = null,
+                    modifier = Modifier.size(100.dp).clip(CircleShape),
                     contentScale = ContentScale.Crop
                 )
             } else {

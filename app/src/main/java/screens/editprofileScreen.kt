@@ -2,6 +2,8 @@ package screens
 
 import android.annotation.SuppressLint
 import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -22,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
@@ -40,6 +43,13 @@ fun EditProfileScreen(navController: NavController, provider: MainProvider) {
     var nickname by remember { mutableStateOf(TextFieldValue("")) }
     var bio by remember { mutableStateOf(TextFieldValue("")) }
     val coroutineScope = rememberCoroutineScope()
+
+    val context = LocalContext.current
+    val imageLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        profileImageUri = uri
+    }
 
     val userState by provider.userState.collectAsState()
     LaunchedEffect(userState) {
@@ -90,7 +100,7 @@ fun EditProfileScreen(navController: NavController, provider: MainProvider) {
                     modifier = Modifier
                         .size(120.dp)
                         .clip(CircleShape)
-                        .clickable { profileImageUri = pickImageFromGallery() }
+                        .clickable { imageLauncher.launch("image/*") }
                 )
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -115,22 +125,25 @@ fun EditProfileScreen(navController: NavController, provider: MainProvider) {
     }
 }
 
-// Funkcje pomocnicze:
-fun pickImageFromGallery(): Uri? {
-    // Tu dodaj kod do wybierania zdjęcia z galerii
-    return null
-}
-
 suspend fun saveProfileData(
     provider: MainProvider,
-    nickname: String,
+    name: String,
     bio: String,
-    profileImageUri: Uri?
+    newImageUri: Uri?
 ) {
-    provider.updateUserProfile(
-        name = nickname,
-        bio = bio,
-        profileUrl = profileImageUri?.toString()
-    )
+    val currentImageUrl = provider.userState.value.profileUrl
+
+    if (newImageUri != null && newImageUri.toString() != currentImageUrl) {
+        provider.uploadProfilePicture(newImageUri) { downloadUrl ->
+            if (downloadUrl != null) {
+                provider.updateUserProfile(name, bio, downloadUrl)
+            } else {
+                provider.updateUserProfile(name, bio, currentImageUrl)
+            }
+        }
+    } else {
+        provider.updateUserProfile(name, bio, currentImageUrl)
+    }
 }
+
 

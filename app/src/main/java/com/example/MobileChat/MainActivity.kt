@@ -12,10 +12,13 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.ktx.storage
 
 class MainActivity : ComponentActivity() {
     private lateinit var db: FirebaseFirestore
     private lateinit var auth : FirebaseAuth
+    private lateinit var storage : FirebaseStorage
     private lateinit var provider: MainProvider
     private lateinit var navController: NavHostController
 
@@ -28,6 +31,7 @@ class MainActivity : ComponentActivity() {
         // Init Database connection and provider
         db = Firebase.firestore
         auth = Firebase.auth
+        storage = Firebase.storage
 
         provider = MainProvider()
         setContent {

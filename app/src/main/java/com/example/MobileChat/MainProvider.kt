@@ -1,6 +1,7 @@
 package com.example.MobileChat
 
 import android.content.ContentValues.TAG
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
@@ -11,6 +12,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -32,7 +34,32 @@ class MainProvider  : ViewModel() {
         }
     }
 
+    //Storage
+    fun uploadProfilePicture(imageUri: Uri, onComplete: (String?) -> Unit) {
+        val userId = Firebase.auth.currentUser?.uid ?: return
+        val storageRef = FirebaseStorage.getInstance().reference
+            .child("profile_images/$userId.jpg")
+
+        storageRef.putFile(imageUri)
+            .addOnSuccessListener {
+                storageRef.downloadUrl.addOnSuccessListener { uri ->
+                    onComplete(uri.toString())
+                }
+            }
+            .addOnFailureListener {
+                onComplete(null)
+            }
+    }
+
     //DB
+    fun updateUserProfileUrl(downloadUrl: String) {
+        val userId = Firebase.auth.currentUser?.uid ?: return
+        FirebaseFirestore.getInstance().collection("users")
+            .document(userId)
+            .update("profile_url", downloadUrl)
+    }
+
+
     private fun deleteUserData(){
         val uid = auth.currentUser?.uid ?: return
         FirebaseFirestore.getInstance().collection("users").document(uid)
@@ -236,8 +263,6 @@ class MainProvider  : ViewModel() {
         }
     }
 
-
-
     private fun getUserData(){
         val user = Firebase.auth.currentUser
         user?.let {
@@ -245,6 +270,8 @@ class MainProvider  : ViewModel() {
                 // Id of the provider (ex: google.com)
                 _state.value = _state.value.copy(email = profile.email.toString())
             }
+            val userId = auth.currentUser?.uid ?: return
+            fetchUserData(userId)
         }
     }
 }
