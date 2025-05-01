@@ -22,7 +22,7 @@ fun NavGraph(navController: NavHostController, provider: MainProvider) {
         composable("login") { LoginScreen(navController,provider) }
         composable("register") { RegisterScreen(navController,provider) }
         composable("chats") { ChatsScreen(navController)}
-        composable("friends") { FriendsScreen(navController) }
+        composable("friends") { FriendsScreen(navController, provider) }
         composable("profile") { ProfileScreen(navController, provider) }
         composable("settings") { SettingsScreen(navController, provider) }
         composable("createRoom") { CreateRoomScreen(navController) }

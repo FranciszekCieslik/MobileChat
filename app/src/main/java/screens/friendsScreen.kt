@@ -4,47 +4,50 @@ package screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
-import androidx.compose.material3.Divider
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import com.example.MobileChat.MainProvider
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FriendsScreen(navController: NavController) {
+fun FriendsScreen(navController: NavController, provider: MainProvider = viewModel()) {
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     val tabs = listOf("Search", "Received", "Sent", "Friends")
     Scaffold(
@@ -82,7 +85,7 @@ fun FriendsScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(16.dp))
 
             when (selectedTabIndex) {
-                0 -> SearchUserTab()
+                0 -> SearchUserTab(provider)
                 1 -> ReceivedInvitesTab()
                 2 -> SentInvitesTab()
                 3 -> FriendsListTab()
@@ -92,15 +95,25 @@ fun FriendsScreen(navController: NavController) {
 }
 
 @Composable
-fun SearchUserTab() {
+fun SearchUserTab(provider: MainProvider = viewModel()) {
     var query by remember { mutableStateOf("") }
-    val sampleResults = listOf("john@example.com", "alice123", "bob_smith")
+    var emailList by remember { mutableStateOf<List<String>>(emptyList()) }
+    var nicknameList by remember { mutableStateOf<List<String>>(emptyList()) }
+
+    // Pobieranie danych raz przy pierwszym uruchomieniu
+    LaunchedEffect(Unit) {
+        provider.fetchAllEmails { emailList = it }
+        provider.fetchAllNicknames { nicknameList = it }
+    }
+
+    val combinedList = (emailList + nicknameList)
+        .filter { it.contains(query, ignoreCase = true) }
 
     Column {
         OutlinedTextField(
             value = query,
             onValueChange = { query = it },
-            label = { Text("Search by email or username") },
+            label = { Text("Search by email or nickname") },
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search)
         )
@@ -109,9 +122,7 @@ fun SearchUserTab() {
 
         Text("Results:", style = MaterialTheme.typography.titleMedium)
 
-        sampleResults.filter {
-            it.contains(query, ignoreCase = true)
-        }.forEach { result ->
+        combinedList.forEach { result ->
             ListItem(
                 headlineContent = { Text(result) },
                 trailingContent = {
@@ -120,10 +131,11 @@ fun SearchUserTab() {
                     }
                 }
             )
-            Divider()
+            HorizontalDivider()
         }
     }
 }
+
 
 @Composable
 fun ReceivedInvitesTab() {
@@ -148,7 +160,7 @@ fun ReceivedInvitesTab() {
                     }
                 }
             )
-            Divider()
+            HorizontalDivider()
         }
     }
 }
@@ -170,7 +182,7 @@ fun SentInvitesTab() {
                     }
                 }
             )
-            Divider()
+            HorizontalDivider()
         }
     }
 }
@@ -192,7 +204,7 @@ fun FriendsListTab() {
                     }
                 }
             )
-            Divider()
+            HorizontalDivider()
         }
     }
 }
