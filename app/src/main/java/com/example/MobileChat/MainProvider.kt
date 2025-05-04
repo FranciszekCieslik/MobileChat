@@ -441,33 +441,26 @@ class MainProvider  : ViewModel() {
         val userId = Firebase.auth.currentUser?.uid ?: return
         val userRef = db.collection("users").document(userId)
 
-        // Usuń siebie z friends innych użytkowników
         userRef.get().addOnSuccessListener { document ->
+            // Usuń siebie z friends innych użytkowników
             val friends = document.get("friends") as? List<String> ?: emptyList()
             friends.forEach { friendId ->
-                db.collection("users").document(friendId)
-                    .update("friends", FieldValue.arrayRemove(userId))
-                    .addOnSuccessListener { Log.d("AccountDeletion", "Removed from $friendId's friends") }
-                    .addOnFailureListener { Log.e("AccountDeletion", "Failed for $friendId", it) }
+                removeFriend(friendId)
             }
-        }
 
-        // Usuń siebie z friend_requests innych użytkowników i wyczyść invited_friends
-        userRef.get().addOnSuccessListener { document ->
+            // Usuń wszystkie wysłane zaproszenia
             val invitedFriends = document.get("invited_friends") as? List<String> ?: emptyList()
             invitedFriends.forEach { receiverId ->
-                db.collection("users").document(receiverId)
-                    .update("friend_requests", FieldValue.arrayRemove(userId))
-                    .addOnSuccessListener { Log.d("AccountDeletion", "Removed from $receiverId's friend_requests") }
-                    .addOnFailureListener { Log.e("AccountDeletion", "Failed to update $receiverId", it) }
+                cancelSendFriendRequest(receiverId)
             }
 
-            userRef.update("invited_friends", emptyList<String>())
-                .addOnSuccessListener { Log.d("AccountDeletion", "Cleared invited_friends") }
-                .addOnFailureListener { Log.e("AccountDeletion", "Failed to clear invited_friends", it) }
+            // Usuń wszystkie otrzymane zaproszenia
+            val friendRequests = document.get("friend_requests") as? List<String> ?: emptyList()
+            friendRequests.forEach { senderId ->
+                cancelFriendRequest(senderId)
+            }
         }
     }
-
 
     suspend fun getInvitedFriends(): List<String> {
         val uid = Firebase.auth.currentUser?.uid ?: return emptyList()
