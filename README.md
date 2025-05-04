@@ -22,7 +22,7 @@
 3. **User Session Management**  
    - Implement automatic login persistence  
    - Implement logout functionality
-  
+
 [stage_1](https://github.com/user-attachments/assets/25417b74-4b48-444b-a3be-ca56edd176e2)
 
 ---
@@ -40,7 +40,11 @@
 3. **Friends List**  
    - Enable adding and managing friends  
    - Display available friends in the app
-   - 
+
+[stage_2.webm](https://github.com/user-attachments/assets/0637e7e8-2550-4841-a507-2eb21305c7fd)
+
+---
+     
 ## Stage 3: Real-Time Chat System  
 ### ✅ Goal: Implement real-time messaging  
 1. **Firestore Database Structure for Messages**  
