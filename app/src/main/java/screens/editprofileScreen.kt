@@ -15,6 +15,7 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -38,7 +39,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun EditProfileScreen(navController: NavController, provider: MainProvider) {
     var profileImageUri by remember { mutableStateOf<Uri?>(null) }
-    var nickname by remember { mutableStateOf(TextFieldValue("")) }
+    var nickname by remember { mutableStateOf("") }
     var bio by remember { mutableStateOf(TextFieldValue("")) }
     val coroutineScope = rememberCoroutineScope()
 
@@ -50,7 +51,7 @@ fun EditProfileScreen(navController: NavController, provider: MainProvider) {
 
     val userState by provider.userState.collectAsState()
     LaunchedEffect(userState) {
-        nickname = TextFieldValue(userState.name)
+        nickname = userState.name
         bio = TextFieldValue(userState.bio)
         profileImageUri = userState.profileUrl.takeIf { it.isNotBlank() }?.let { Uri.parse(it) }
     }
@@ -70,7 +71,7 @@ fun EditProfileScreen(navController: NavController, provider: MainProvider) {
                 actions = {
                     IconButton(onClick = {
                         coroutineScope.launch {
-                            saveProfileData(provider, nickname.text, bio.text, profileImageUri)
+                            saveProfileData(provider, nickname, bio.text, profileImageUri)
                             navController.popBackStack()
                         }
                     }) {
@@ -106,13 +107,26 @@ fun EditProfileScreen(navController: NavController, provider: MainProvider) {
             Spacer(modifier = Modifier.height(16.dp))
 
             // Nickname
+            val nicknameRegex = Regex("^[^.#\\[\\]/\$]{3,20}\$") // 3-20 znaków, bez .#[]
+            val isNicknameValid = nickname.matches(nicknameRegex)
+            val nicknameError = !isNicknameValid && nickname.isNotEmpty()
+
             OutlinedTextField(
                 value = nickname,
                 onValueChange = { nickname = it },
                 label = { Text("Nickname") },
-                modifier = Modifier.fillMaxWidth()
+                isError = nicknameError,
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
             )
-            Spacer(modifier = Modifier.height(8.dp))
+
+            if (nicknameError) {
+                Text(
+                    text = "Nickname must be 3-20 characters long and cannot contain . # [ ] / \$",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
 
             // Opis
             OutlinedTextField(

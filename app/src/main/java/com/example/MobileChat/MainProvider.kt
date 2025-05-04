@@ -54,14 +54,19 @@ class MainProvider  : ViewModel() {
     }
 
     //DB
+
+    private fun isValidFirestoreId(id: String): Boolean {
+        return id.isNotBlank() && !id.contains(Regex("[.#\\[\\]/]"))
+    }
+
     private fun createUserMappings(email: String, nickname: String?, userId: String) {
         // mapowanie email
         db.collection("emailToId").document(email).set(mapOf("userId" to userId))
 
-        // mapowanie nickname, jeśli istnieje
-        nickname?.let {
-            db.collection("nicknameToId").document(it).set(mapOf("userId" to userId))
+        if (!nickname.isNullOrBlank() && isValidFirestoreId(nickname)) {
+            db.collection("nicknameToId").document(nickname).set(mapOf("userId" to userId))
         }
+
     }
 
     fun getUserIdByEmail(email: String, onResult: (String?) -> Unit) {
