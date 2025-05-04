@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -34,6 +36,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,6 +47,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.MobileChat.MainProvider
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -86,9 +90,9 @@ fun FriendsScreen(navController: NavController, provider: MainProvider = viewMod
 
             when (selectedTabIndex) {
                 0 -> SearchUserTab(provider)
-                1 -> ReceivedInvitesTab()
-                2 -> SentInvitesTab()
-                3 -> FriendsListTab()
+                1 -> ReceivedInvitesTab(provider)
+                2 -> SentInvitesTab(provider)
+                3 -> FriendsListTab(provider)
             }
         }
     }
@@ -97,17 +101,10 @@ fun FriendsScreen(navController: NavController, provider: MainProvider = viewMod
 @Composable
 fun SearchUserTab(provider: MainProvider = viewModel()) {
     var query by remember { mutableStateOf("") }
-    var emailList by remember { mutableStateOf<List<String>>(emptyList()) }
-    var nicknameList by remember { mutableStateOf<List<String>>(emptyList()) }
-
-    // Pobieranie danych raz przy pierwszym uruchomieniu
-    LaunchedEffect(Unit) {
-        provider.fetchAllEmails { emailList = it }
-        provider.fetchAllNicknames { nicknameList = it }
+    var filteredResults by remember { mutableStateOf<List<String>>(emptyList()) }
+    LaunchedEffect(query) {
+        filteredResults = provider.getFilteredInviteCandidates(query = query)
     }
-
-    val combinedList = (emailList + nicknameList)
-        .filter { it.contains(query, ignoreCase = true) }
 
     Column {
         OutlinedTextField(
@@ -119,14 +116,35 @@ fun SearchUserTab(provider: MainProvider = viewModel()) {
         )
 
         Spacer(modifier = Modifier.height(16.dp))
-
         Text("Results:", style = MaterialTheme.typography.titleMedium)
 
-        combinedList.forEach { result ->
+        filteredResults.forEach { result ->
             ListItem(
                 headlineContent = { Text(result) },
                 trailingContent = {
-                    Button(onClick = { /* handle send invite */ }) {
+                    Button(onClick = {
+
+                        val isEmail = result.contains("@")
+                        val removeFromList: (String) -> Unit = { toRemove ->
+                            filteredResults = filteredResults.filterNot { it == toRemove }
+                        }
+
+                        if (isEmail) {
+                            provider.getUserIdByEmail(result) { receiverId ->
+                                receiverId?.let {
+                                    provider.sendFriendRequest(it)
+                                    removeFromList(result)
+                                }
+                            }
+                        } else {
+                            provider.getUserIdByNickname(result) { receiverId ->
+                                receiverId?.let {
+                                    provider.sendFriendRequest(it)
+                                    removeFromList(result)
+                                }
+                            }
+                        }
+                    }) {
                         Text("Invite")
                     }
                 }
@@ -134,77 +152,164 @@ fun SearchUserTab(provider: MainProvider = viewModel()) {
             HorizontalDivider()
         }
     }
+
 }
 
 
 @Composable
-fun ReceivedInvitesTab() {
-    val receivedInvites = listOf("jane_doe", "michael1988")
+fun ReceivedInvitesTab(provider: MainProvider = viewModel()) {
+    var receivedInvites by remember { mutableStateOf<List<String>>(emptyList()) }
+    var userNameCache by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+    val coroutineScope = rememberCoroutineScope()
 
-    Column {
+    // Pobranie zaproszeń
+    LaunchedEffect(Unit) {
+        val invites = provider.getFriendRequests()
+        receivedInvites = invites
+    }
+
+    // Pobranie nazw użytkowników
+    LaunchedEffect(receivedInvites) {
+        val updatedCache = userNameCache.toMutableMap()
+        receivedInvites.forEach { senderId ->
+            if (!updatedCache.containsKey(senderId)) {
+                val name = provider.getUserName(senderId)
+                updatedCache[senderId] = name
+            }
+        }
+        userNameCache = updatedCache
+    }
+
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Text("Received Invites:", style = MaterialTheme.typography.titleMedium)
         Spacer(modifier = Modifier.height(8.dp))
 
-        receivedInvites.forEach { name ->
-            ListItem(
-                headlineContent = { Text(name) },
-                trailingContent = {
-                    Row {
-                        Button(onClick = { /* handle accept */ }) {
-                            Text("Accept")
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        OutlinedButton(onClick = { /* handle decline */ }) {
-                            Text("Decline")
+        LazyColumn {
+            items(receivedInvites) { senderId ->
+                val displayName = userNameCache[senderId] ?: "Wczytywanie..."
+
+                ListItem(
+                    headlineContent = { Text(displayName) },
+                    trailingContent = {
+                        Row {
+                            Button(onClick = {
+                                coroutineScope.launch {
+                                    provider.acceptFriendRequest(senderId)
+                                    receivedInvites = receivedInvites.filterNot { it == senderId }
+                                }
+                            }) {
+                                Text("Accept")
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            OutlinedButton(onClick = {
+                                coroutineScope.launch {
+                                    provider.cancelFriendRequest(senderId)
+                                    receivedInvites = receivedInvites.filterNot { it == senderId }
+                                }
+                            }) {
+                                Text("Decline")
+                            }
                         }
                     }
-                }
-            )
-            HorizontalDivider()
+                )
+                HorizontalDivider()
+            }
         }
     }
 }
 
-@Composable
-fun SentInvitesTab() {
-    val sentInvites = listOf("anna.w", "dave99")
 
-    Column {
+
+@Composable
+fun SentInvitesTab(provider: MainProvider = viewModel()) {
+    var sentInvites by remember { mutableStateOf<List<String>>(emptyList()) }
+    var userNameCache by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        sentInvites = provider.getInvitedFriends()
+    }
+
+    LaunchedEffect(sentInvites) {
+        val updatedCache = userNameCache.toMutableMap()
+        sentInvites.forEach { receiverId ->
+            if (!updatedCache.containsKey(receiverId)) {
+                val name = provider.getUserName(receiverId)
+                updatedCache[receiverId] = name
+            }
+        }
+        userNameCache = updatedCache
+    }
+
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Text("Sent Invites:", style = MaterialTheme.typography.titleMedium)
         Spacer(modifier = Modifier.height(8.dp))
 
-        sentInvites.forEach { name ->
-            ListItem(
-                headlineContent = { Text(name) },
-                trailingContent = {
-                    OutlinedButton(onClick = { /* handle cancel invite */ }) {
-                        Text("Cancel")
+        LazyColumn {
+            items(sentInvites) { receiverId ->
+                val displayName = userNameCache[receiverId] ?: "Wczytywanie..."
+
+                ListItem(
+                    headlineContent = { Text(displayName) },
+                    trailingContent = {
+                        OutlinedButton(onClick = {
+                            coroutineScope.launch {
+                                provider.cancelSendFriendRequest(receiverId)
+                                sentInvites = sentInvites.filterNot { it == receiverId }
+                            }
+                        }) {
+                            Text("Cancel")
+                        }
                     }
-                }
-            )
-            HorizontalDivider()
+                )
+                HorizontalDivider()
+            }
         }
     }
 }
 
-@Composable
-fun FriendsListTab() {
-    val friends = listOf("charlie", "emily_92", "frank123")
 
-    Column {
+@Composable
+fun FriendsListTab(provider: MainProvider = viewModel()) {
+    var friends by remember { mutableStateOf<List<String>>(emptyList()) }
+    var userNameCache by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+
+    LaunchedEffect(Unit) {
+        friends = provider.getFriends()
+    }
+
+    LaunchedEffect(friends) {
+        val updatedCache = userNameCache.toMutableMap()
+        friends.forEach { friendId ->
+            if (!updatedCache.containsKey(friendId)) {
+                val name = provider.getUserName(friendId)
+                updatedCache[friendId] = name
+            }
+        }
+        userNameCache = updatedCache
+    }
+
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Text("Friends:", style = MaterialTheme.typography.titleMedium)
         Spacer(modifier = Modifier.height(8.dp))
 
-        friends.forEach { name ->
-            ListItem(
-                headlineContent = { Text(name) },
-                trailingContent = {
-                    IconButton(onClick = { /* handle remove friend */ }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Remove friend")
+        LazyColumn {
+            items(friends) { friendId ->
+                val displayName = userNameCache[friendId] ?: "Wczytywanie..."
+
+                ListItem(
+                    headlineContent = { Text(displayName) },
+                    trailingContent = {
+                        IconButton(onClick = {
+                            provider.removeFriend(friendId)
+                            friends = friends.filterNot { it == friendId }
+                        }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Remove friend")
+                        }
                     }
-                }
-            )
-            HorizontalDivider()
+                )
+                HorizontalDivider()
+            }
         }
     }
 }

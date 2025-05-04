@@ -10,11 +10,13 @@ import com.example.MobileChat.states.UserState
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.tasks.await
 
 @Suppress("UNCHECKED_CAST")
 class MainProvider  : ViewModel() {
@@ -293,7 +295,7 @@ class MainProvider  : ViewModel() {
                 // Najpierw pobieramy dane użytkownika
                 userDocRef.get().addOnSuccessListener { doc ->
                     val nickname = doc.getString("nickname")
-
+                    removeMyselfFromOthersFriends()
                     // Usuń dokument użytkownika
                     userDocRef.delete()
 
@@ -328,33 +330,206 @@ class MainProvider  : ViewModel() {
         }
     }
 
-    fun fetchAllEmails(onResult: (List<String>) -> Unit) {
-        val db = FirebaseFirestore.getInstance()
-        db.collection("emailToId")
-            .get()
-            .addOnSuccessListener { querySnapshot ->
-                val emails = querySnapshot.documents.mapNotNull { it.id }
-                onResult(emails)
+    //FRIENDS
+    fun sendFriendRequest(receiverId: String) {
+        val senderId = Firebase.auth.currentUser?.uid ?: return
+
+        val senderRef = db.collection("users").document(senderId)
+        val receiverRef = db.collection("users").document(receiverId)
+
+        senderRef.update("invited_friends", FieldValue.arrayUnion(receiverId))
+            .addOnSuccessListener {
+                Log.d("FriendRequest", "Added $receiverId to invited_friends")
             }
-            .addOnFailureListener { exception ->
-                Log.e("Firestore", "Błąd przy pobieraniu emaili: ", exception)
-                onResult(emptyList())
+            .addOnFailureListener {
+                Log.e("FriendRequest", "Error adding to invited_friends", it)
+            }
+
+        receiverRef.update("friend_requests", FieldValue.arrayUnion(senderId))
+            .addOnSuccessListener {
+                Log.d("FriendRequest", "Added $senderId to $receiverId.friend_requests")
+            }
+            .addOnFailureListener {
+                Log.e("FriendRequest", "Error adding to friend_requests", it)
             }
     }
 
-    fun fetchAllNicknames(onResult: (List<String>) -> Unit) {
-        val db = FirebaseFirestore.getInstance()
-        db.collection("nicknameToId")
-            .get()
-            .addOnSuccessListener { querySnapshot ->
-                val nicknames = querySnapshot.documents.mapNotNull { it.id }
-                onResult(nicknames)
+    fun cancelSendFriendRequest(receiverId: String) {
+        val senderId = Firebase.auth.currentUser?.uid ?: return
+
+        val senderRef = db.collection("users").document(senderId)
+        val receiverRef = db.collection("users").document(receiverId)
+
+        senderRef.update("invited_friends", FieldValue.arrayRemove(receiverId))
+            .addOnSuccessListener {
+                Log.d("FriendRequest", "Removed $receiverId from invited_friends")
             }
-            .addOnFailureListener { exception ->
-                Log.e("Firestore", "Błąd przy pobieraniu nickname'ów: ", exception)
-                onResult(emptyList())
+            .addOnFailureListener {
+                Log.e("FriendRequest", "Error adding to invited_friends", it)
+            }
+
+        receiverRef.update("friend_requests", FieldValue.arrayRemove(senderId))
+            .addOnSuccessListener {
+                Log.d("FriendRequest", "Removed $senderId from $receiverId.friend_requests")
+            }
+            .addOnFailureListener {
+                Log.e("FriendRequest", "Error adding to friend_requests", it)
             }
     }
 
+    fun cancelFriendRequest(senderId: String) {
+        val receiverId = Firebase.auth.currentUser?.uid ?: return
+        val receiverRef = db.collection("users").document(receiverId)
+        val senderRef = db.collection("users").document(senderId)
 
+        // Usuń z friend_requests i invited_friends
+        receiverRef.update("friend_requests", FieldValue.arrayRemove(senderId))
+            .addOnSuccessListener {
+                Log.d(
+                    "Accept",
+                    "Removed $senderId from receiver's friend_requests"
+                )
+            }
+
+        senderRef.update("invited_friends", FieldValue.arrayRemove(receiverId))
+            .addOnSuccessListener {
+                Log.d(
+                    "Accept",
+                    "Removed $receiverId from sender's invited_friends"
+                )
+            }
+    }
+
+    fun acceptFriendRequest(senderId: String) {
+        val receiverId = Firebase.auth.currentUser?.uid ?: return
+        val receiverRef = db.collection("users").document(receiverId)
+        val senderRef = db.collection("users").document(senderId)
+
+        // Usuń z friend_requests i invited_friends
+        receiverRef.update("friend_requests", FieldValue.arrayRemove(senderId))
+            .addOnSuccessListener { Log.d("Accept", "Removed $senderId from receiver's friend_requests") }
+
+        senderRef.update("invited_friends", FieldValue.arrayRemove(receiverId))
+            .addOnSuccessListener { Log.d("Accept", "Removed $receiverId from sender's invited_friends") }
+
+        // Dodaj do friends
+        receiverRef.update("friends", FieldValue.arrayUnion(senderId))
+            .addOnSuccessListener { Log.d("Accept", "Added $senderId to receiver's friends") }
+
+        senderRef.update("friends", FieldValue.arrayUnion(receiverId))
+            .addOnSuccessListener { Log.d("Accept", "Added $receiverId to sender's friends") }
+    }
+
+    suspend fun getFriendRequests(): List<String> {
+        val uid = Firebase.auth.currentUser?.uid ?: return emptyList()
+
+        return try {
+            val snapshot = db.collection("users").document(uid).get().await()
+            snapshot.get("friend_requests") as? List<String> ?: emptyList()
+        } catch (e: Exception) {
+            Log.e("getFriendRequests", "Error fetching friend_requests", e)
+            emptyList()
+        }
+    }
+
+    private fun removeMyselfFromOthersFriends() {
+        val userId = Firebase.auth.currentUser?.uid ?: return
+        val userRef = db.collection("users").document(userId)
+
+        // Usuń siebie z friends innych użytkowników
+        userRef.get().addOnSuccessListener { document ->
+            val friends = document.get("friends") as? List<String> ?: emptyList()
+            friends.forEach { friendId ->
+                db.collection("users").document(friendId)
+                    .update("friends", FieldValue.arrayRemove(userId))
+                    .addOnSuccessListener { Log.d("AccountDeletion", "Removed from $friendId's friends") }
+                    .addOnFailureListener { Log.e("AccountDeletion", "Failed for $friendId", it) }
+            }
+        }
+
+        // Usuń siebie z friend_requests innych użytkowników i wyczyść invited_friends
+        userRef.get().addOnSuccessListener { document ->
+            val invitedFriends = document.get("invited_friends") as? List<String> ?: emptyList()
+            invitedFriends.forEach { receiverId ->
+                db.collection("users").document(receiverId)
+                    .update("friend_requests", FieldValue.arrayRemove(userId))
+                    .addOnSuccessListener { Log.d("AccountDeletion", "Removed from $receiverId's friend_requests") }
+                    .addOnFailureListener { Log.e("AccountDeletion", "Failed to update $receiverId", it) }
+            }
+
+            userRef.update("invited_friends", emptyList<String>())
+                .addOnSuccessListener { Log.d("AccountDeletion", "Cleared invited_friends") }
+                .addOnFailureListener { Log.e("AccountDeletion", "Failed to clear invited_friends", it) }
+        }
+    }
+
+
+    suspend fun getInvitedFriends(): List<String> {
+        val uid = Firebase.auth.currentUser?.uid ?: return emptyList()
+
+        return try {
+            val snapshot = db.collection("users").document(uid).get().await()
+            snapshot.get("invited_friends") as? List<String> ?: emptyList()
+        } catch (e: Exception) {
+            Log.e("getInvitedFriends", "Error fetching invited_friends", e)
+            emptyList()
+        }
+    }
+
+    //Data to screens
+    suspend fun getFriends(): List<String> {
+        val uid = Firebase.auth.currentUser?.uid ?: return emptyList()
+        val snapshot = db.collection("users").document(uid).get().await()
+        return snapshot.get("friends") as? List<String> ?: emptyList()
+    }
+
+    fun removeFriend(friendId: String) {
+        val userId = Firebase.auth.currentUser?.uid ?: return
+
+        val userRef = db.collection("users").document(userId)
+        val friendRef = db.collection("users").document(friendId)
+
+        // Usuń siebie z jego friends i jego z siebie
+        userRef.update("friends", FieldValue.arrayRemove(friendId))
+            .addOnSuccessListener { Log.d("Friends", "Removed $friendId from user's friends") }
+            .addOnFailureListener { Log.e("Friends", "Failed to update user", it) }
+
+        friendRef.update("friends", FieldValue.arrayRemove(userId))
+            .addOnSuccessListener { Log.d("Friends", "Removed $userId from friend's friends") }
+            .addOnFailureListener { Log.e("Friends", "Failed to update friend", it) }
+    }
+
+    suspend fun getUserName(userId: String): String {
+        val userRef = db.collection("users").document(userId)
+        val snapshot = userRef.get().await()
+
+        val name = snapshot.getString("name")?.trim()
+        return if (!name.isNullOrEmpty()) {
+            name
+        } else {
+            snapshot.getString("email") ?: "Nieznany użytkownik"
+        }
+    }
+
+    suspend fun getFilteredInviteCandidates(query: String): List<String> {
+        val currentUserId = auth.currentUser?.uid ?: return emptyList()
+
+        val currentUserSnapshot = db.collection("users").document(currentUserId).get().await()
+
+        val invitedFriends = currentUserSnapshot.get("invited_friends") as? List<String> ?: emptyList()
+        val friends = currentUserSnapshot.get("friends") as? List<String> ?: emptyList()
+        val friendRequests = currentUserSnapshot.get("friend_requests") as? List<String> ?: emptyList()
+
+        val excludedIds = invitedFriends + friends + friendRequests + listOf(currentUserId)
+
+        val allUsersSnapshot = db.collection("users").get().await()
+
+        return allUsersSnapshot.documents
+            .filter { it.id !in excludedIds }
+            .mapNotNull { doc ->
+                val id = doc.id
+                val name = getUserName(id)
+                if (name.contains(query, ignoreCase = true)) name else null
+            }
+    }
 }
