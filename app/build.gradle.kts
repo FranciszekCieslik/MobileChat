@@ -63,23 +63,24 @@ dependencies {
     // NAVIGATION WITH COMPOSE
     implementation("androidx.navigation:navigation-compose:2.8.9")
 
-    // FIREBASE AUTHENTICATION
+    // FIREBASE AUTHENTICATION & SERVICES
     // Import the BoM for the Firebase platform
     implementation(platform("com.google.firebase:firebase-bom:33.10.0"))
 
-    // Add the dependency for the Firebase Authentication library
-    // When using the BoM, you don't specify versions in Firebase library dependencies
+    // Firebase Authentication
     implementation("com.google.firebase:firebase-auth-ktx:23.2.0")
 
-    // Also add the dependencies for the Credential Manager libraries and specify their versions
+    // Firebase Firestore
+    implementation(libs.firebase.firestore)
+
+    // Firebase Storage
+    implementation("com.google.firebase:firebase-storage-ktx")
+
+    // Credential Manager libraries
     implementation("androidx.credentials:credentials:1.3.0")
     implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 
-    //Coli3
-    implementation(libs.coil.compose) // Latest stable version
-
-    // Declare the dependency for the Cloud Firestore library
-    // When using the BoM, you don't specify versions in Firebase library dependencies
-    implementation(libs.firebase.firestore)
+    // Coil for image loading
+    implementation(libs.coil.compose)
 }
