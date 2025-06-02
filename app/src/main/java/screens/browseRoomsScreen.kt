@@ -1,3 +1,4 @@
+// app/src/main/java/screens/BrowseRoomsScreen.kt
 package screens
 
 import androidx.compose.foundation.layout.Arrangement
@@ -33,9 +34,10 @@ import com.google.firebase.ktx.Firebase
 @Composable
 fun BrowseRoomsScreen(navController: NavController) {
     val firestore = Firebase.firestore
+    // Teraz RoomResponse ma: id, name, secure, password
     val rooms = remember { mutableStateOf<List<RoomResponse>>(emptyList()) }
 
-    //snapshot listener na kolekcję "rooms"
+    // Nasłuch na kolekcję „rooms”
     LaunchedEffect(Unit) {
         firestore.collection("rooms").addSnapshotListener { snapshot, e ->
             if (e != null) {
@@ -43,8 +45,16 @@ fun BrowseRoomsScreen(navController: NavController) {
             }
             snapshot?.let { snap ->
                 val list = snap.documents.mapNotNull { doc ->
-                    val name = doc.getString("name")
-                    if (name != null) RoomResponse(id = doc.id, name = name) else null
+                    val name = doc.getString("name") ?: return@mapNotNull null
+                    val secure = doc.getBoolean("secure") ?: false
+                    // Hasło może być null, jeśli „secure == false”
+                    val password = doc.getString("password")
+                    RoomResponse(
+                        id = doc.id,
+                        name = name,
+                        secure = secure,
+                        password = password
+                    )
                 }
                 rooms.value = list
             }
@@ -75,10 +85,18 @@ fun BrowseRoomsScreen(navController: NavController) {
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(rooms.value) { room ->
-                        RoomItem(room = room, onJoinClick = {
-                            // TODO: Make chat window
-                            navController.navigate("chat/${room.id}")
-                        })
+                        RoomItem(
+                            room = room,
+                            onJoinClick = {
+                                if (room.secure) {
+                                    // Jeżeli pokój zabezpieczony, najpierw hasło
+                                    navController.navigate("enterPassword/${room.id}")
+                                } else {
+                                    // Natychmiast do czatu
+                                    navController.navigate("chat/${room.id}")
+                                }
+                            }
+                        )
                     }
                 }
             }
@@ -93,7 +111,6 @@ fun RoomItem(room: RoomResponse, onJoinClick: () -> Unit) {
             .fillMaxWidth()
             .padding(8.dp)
     ) {
-        // przycisk "Join"
         androidx.compose.foundation.layout.Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -101,7 +118,11 @@ fun RoomItem(room: RoomResponse, onJoinClick: () -> Unit) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = room.name, fontSize = 18.sp)
+            // Pokazujemy nazwę + jeśli zabezpieczony, dopisujemy „(🔒)”
+            Text(
+                text = if (room.secure) "${room.name} (🔒)" else room.name,
+                fontSize = 18.sp
+            )
             Button(onClick = onJoinClick) {
                 Text("Join")
             }
