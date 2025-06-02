@@ -16,6 +16,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -24,14 +28,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import authentication.RegisterViewModel
+import com.example.MobileChat.MainProvider
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     navController: NavController,
-    viewModel: RegisterViewModel = viewModel()
+    provider: MainProvider = viewModel()
 ) {
+    var showDialog by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -61,7 +67,7 @@ fun SettingsScreen(
         ) {
             // Przycisk wylogowania
             Button(
-                onClick = { viewModel.signOut(navController) },
+                onClick = { provider.signOut(navController) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
@@ -70,14 +76,20 @@ fun SettingsScreen(
             }
 
             // Przycisk usunięcia konta
-            Button(
-                onClick = { viewModel.removeUser(navController) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
-            ) {
-                Text("Delete Account", color = Color.White)
+            Button(onClick = { showDialog = true }) {
+                Text("Delete Account")
+            }
+
+            if (showDialog) {
+                DeleteAccountDialog(
+
+                    onConfirm = { password ->
+                        // Tu wykonaj reauthentication i delete
+                        provider.removeUser(navController, password)
+                        showDialog = false
+                    },
+                    onDismiss = { showDialog = false }
+                )
             }
         }
     }

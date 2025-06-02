@@ -1,13 +1,27 @@
 package screens
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.*
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
@@ -15,14 +29,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import authentication.RegisterViewModel
-import coil.compose.AsyncImage
-import com.example.MobileChat.R
+import coil.compose.rememberAsyncImagePainter
+import com.example.MobileChat.MainProvider
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,9 +43,9 @@ import com.example.MobileChat.R
 @Composable
 fun ProfileScreen(
     navController: NavController,
-    viewModel: RegisterViewModel
+    provider: MainProvider = viewModel()
 ) {
-    val state = viewModel.state.collectAsState()
+    val userState = provider.userState.collectAsState()
 
     Scaffold(
         bottomBar = {
@@ -40,12 +53,22 @@ fun ProfileScreen(
         },
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Your Profile", fontSize = 20.sp, fontWeight = FontWeight.Bold) },
+                title = {
+                    Text("Your Profile", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigate("settings") }) {
                         Icon(
                             imageVector = Icons.Filled.Settings,
                             contentDescription = "Go to Settings"
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { navController.navigate("editprofile") }) {
+                        Icon(
+                            imageVector = Icons.Filled.Edit,
+                            contentDescription = "Edit your profile"
                         )
                     }
                 },
@@ -55,6 +78,7 @@ fun ProfileScreen(
                 )
             )
         }
+
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -64,16 +88,22 @@ fun ProfileScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (state.value.photoUrl != "null") {
-                AsyncImage(
-                    model = state.value.photoUrl,
-                    contentDescription = "Profile Picture",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(100.dp)
-                        .clip(CircleShape)
-                        .border(2.dp, Color.Black, CircleShape),
-                    placeholder = painterResource(R.drawable.account_icon)
+            val profileUrl = userState.value.profileUrl
+
+            if (profileUrl.isNotBlank()) {
+//                androidx.compose.foundation.Image(
+//                    painter = rememberAsyncImagePainter(profileUrl),
+//                    contentDescription = "Profile Picture",
+//                    modifier = Modifier
+//                        .size(100.dp)
+//                        .clip(CircleShape),
+//                    contentScale = ContentScale.Crop
+//                )
+                Image(
+                    painter = rememberAsyncImagePainter(model = userState.value.profileUrl),
+                    contentDescription = null,
+                    modifier = Modifier.size(100.dp).clip(CircleShape),
+                    contentScale = ContentScale.Crop
                 )
             } else {
                 Icon(
@@ -88,21 +118,30 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Nazwa użytkownika
-            if (state.value.name.isNotEmpty()) {
+            if (userState.value.name.isNotBlank()) {
                 Text(
-                    text = state.value.name,
-                    style = MaterialTheme.typography.bodyLarge
+                    text = userState.value.name.trim(),
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold
                 )
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Adres e-mail użytkownika
             Text(
-                text = state.value.email,
+                text = userState.value.email,
                 style = MaterialTheme.typography.bodyMedium
             )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if (userState.value.bio.isNotBlank()) {
+                Text(
+                    text = userState.value.bio.trim(),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray
+                )
+            }
         }
     }
 }

@@ -1,4 +1,3 @@
-// app/src/main/java/com/example/MobileChat/NavGraph.kt
 package com.example.MobileChat
 
 import androidx.compose.runtime.Composable
@@ -6,7 +5,14 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import authentication.RegisterViewModel
-import screens.*
+import screens.MainScreen
+import screens.LoadingScreen
+import screens.RegisterScreen
+import screens.ProfileScreen
+import screens.SettingsScreen
+import screens.LoginScreen
+import screens.CreateRoomScreen
+import screens.BrowseRoomsScreen
 
 @Composable
 fun NavGraph(navController: NavHostController, viewModel: RegisterViewModel) {
@@ -19,17 +25,5 @@ fun NavGraph(navController: NavHostController, viewModel: RegisterViewModel) {
         composable("settings") { SettingsScreen(navController, viewModel) }
         composable("createRoom") { CreateRoomScreen(navController) }
         composable("browseRooms") { BrowseRoomsScreen(navController) }
-
-        // DODAJEMY TUTAJ nową composable dla hasła (parametr: roomId)
-        composable("enterPassword/{roomId}") { backStackEntry ->
-            val roomId = backStackEntry.arguments?.getString("roomId") ?: ""
-            EnterPasswordScreen(navController = navController, roomId = roomId)
-        }
-
-        // Trasa do czatu (tu już zakładamy, że user ma prawo wchodzić – w tym przykładzie nie walidujemy ponownie hasła)
-        composable("chat/{roomId}") { backStackEntry ->
-            val roomId = backStackEntry.arguments?.getString("roomId") ?: ""
-            ChatScreen(navController = navController, roomId = roomId)
-        }
     }
 }

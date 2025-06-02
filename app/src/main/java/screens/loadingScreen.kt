@@ -13,12 +13,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import authentication.RegisterViewModel
+import com.example.MobileChat.MainProvider
 
 @Composable
 fun LoadingScreen(
     navController: NavController,
-    viewModel: RegisterViewModel = viewModel()
+    provider: MainProvider = viewModel()
 ){
     Column(
         modifier = Modifier
@@ -29,5 +29,5 @@ fun LoadingScreen(
     ) {
         CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.LightGray)
     }
-    viewModel.checkUserSession(navController)
+    provider.checkUserSession(navController)
 }

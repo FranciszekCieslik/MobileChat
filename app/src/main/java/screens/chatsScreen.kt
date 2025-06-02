@@ -25,9 +25,9 @@ import androidx.compose.material3.MaterialTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(navController: NavController) {
+fun ChatsScreen(navController: NavController) {
     Scaffold(
-        bottomBar = { BottomNavBar(navController, selectedRoute = "main") },
+        bottomBar = { BottomNavBar(navController, selectedRoute = "chats") },
         topBar = {
             TopAppBar(
                 title = {
@@ -48,7 +48,7 @@ fun MainScreen(navController: NavController) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Main Content", fontSize = 18.sp, fontWeight = FontWeight.Medium)
+            Text("Chats Content", fontSize = 18.sp, fontWeight = FontWeight.Medium)
             Spacer(modifier = Modifier.height(16.dp))
             Button(
                 onClick = { navController.navigate("createRoom") },

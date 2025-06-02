@@ -29,14 +29,15 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import authentication.RegisterViewModel
+
+import com.example.MobileChat.MainProvider
 
 @Composable
 fun RegisterScreen(
     navController: NavController,
-    viewModel: RegisterViewModel = viewModel()
+    provider: MainProvider = viewModel()
 ) {
-    val state = viewModel.state.collectAsState()
+    val state = provider.state.collectAsState()
     var termsAccepted by remember { mutableStateOf(false) }
     val isEmailValid = state.value.email.matches(Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$"))
     val isPasswordValid = state.value.password.length >= 8
@@ -55,13 +56,13 @@ fun RegisterScreen(
 
         EmailField(
             value = state.value.email,
-            onValueChange = { viewModel.onEmailChange(it) },
+            onValueChange = { provider.onEmailChange(it) },
             isEmailValid
         )
 
         PasswordField(
             value = state.value.password,
-            onValueChange = { viewModel.onPasswordChange(it) },
+            onValueChange = { provider.onPasswordChange(it) },
             isPasswordValid
         )
         Spacer(modifier = Modifier.height(16.dp))
@@ -95,7 +96,7 @@ fun RegisterScreen(
         }
         Spacer(modifier = Modifier.height(8.dp))
         Button(
-            onClick = { viewModel.signUp(navController) },
+            onClick = {provider.signUp(navController)},
             modifier = Modifier.fillMaxWidth(),
             enabled = isFormValid
             ) {
